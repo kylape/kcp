@@ -107,7 +107,7 @@ func (c *Controller) reconcile(ctx context.Context, cluster *clusterv1alpha1.Clu
 		}.String())
 	}
 
-	var upToDate bool
+	upToDate := true
 	if c.syncerMode == SyncerModePull {
 		upToDate, err = isSyncerInstalledAndUpToDate(ctx, client, logicalCluster, c.syncerImage)
 		if err != nil {
@@ -115,6 +115,9 @@ func (c *Controller) reconcile(ctx context.Context, cluster *clusterv1alpha1.Clu
 			return err
 		}
 	}
+
+	klog.Infof("Is the set of synced resources == groupResources? %v", sets.NewString(cluster.Status.SyncedResources...).Equal(groupResources))
+	klog.Infof("!upToDate && groupResources.Len() > 0: %v", !upToDate && groupResources.Len() > 0)
 
 	if !sets.NewString(cluster.Status.SyncedResources...).Equal(groupResources) || (!upToDate && groupResources.Len() > 0) {
 		kubeConfig := c.kubeconfig.DeepCopy()
@@ -187,6 +190,8 @@ func (c *Controller) reconcile(ctx context.Context, cluster *clusterv1alpha1.Clu
 				"Syncer ready")
 		}
 		cluster.Status.SyncedResources = groupResources.List()
+	} else {
+		klog.Infof("Not setting up syncer for %v", cluster.Name)
 	}
 
 	if cluster.Status.Conditions.HasReady() {
