@@ -1,0 +1,121 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kcp
+spec:
+  secretName: kcp-secret
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+      - redhat
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - kcp
+    - "*openshiftapps.com"
+  ipAddresses:
+    - 0.0.0.0
+  issuerRef:
+    name: kcp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kcp
+spec:
+  ports:
+    - protocol: TCP
+      name: kcp
+      port: 6443
+      targetPort: 6443
+    - protocol: TCP
+      name: virtual-workspaces
+      port: 6444
+      targetPort: 6444
+  selector:
+    app: kcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kcp
+  labels:
+    app: kcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kcp
+  template:
+    metadata:
+      labels:
+        app: kcp
+    spec:
+      containers:
+      - name: kcp
+        # image: ghcr.io/kcp-dev/kcp:dfc490d
+        image: quay.io/klape/kcp:latest
+        ports:
+        - containerPort: 6443
+        command:
+        - /kcp
+        args:
+        - start
+        - --install-cluster-controller=true
+        - --install-namespace-scheduler=true
+        - --install-workspace-scheduler=true
+        - --auto-publish-apis=true
+        - --push-mode=true
+        - --etcd-servers=https://etcd:2379
+        - --etcd-keyfile=/etc/etcd/tls/server/tls.key
+        - --etcd-certfile=/etc/etcd/tls/server/tls.crt
+        - --etcd-cafile=/etc/etcd/tls/server/ca.crt
+        - --server-keyfile=/etc/kcp/tls/server/tls.key
+        - --server-certfile=/etc/kcp/tls/server/tls.crt
+        - --root-directory=/tmp/kcp
+        - --oidc-issuer-url=https://sso.redhat.com/auth/realms/redhat-external
+        - --oidc-client-id=rhoas-cli-prod
+        volumeMounts:
+        - name: etcd-certs
+          mountPath: /etc/etcd/tls/server
+        - name: kcp-certs
+          mountPath: /etc/kcp/tls/server
+        - name: kubeconfig
+          mountPath: /tmp/kcp
+      - name: virtual-workspaces
+        # image: ghcr.io/kcp-dev/kcp:dfc490d
+        image: quay.io/klape/kcp:latest
+        ports:
+        - containerPort: 6443
+        command:
+        - /virtual-workspaces
+        args:
+        - workspaces
+        - --workspaces:kubeconfig=/tmp/kcp/admin.kubeconfig
+        - --authentication-kubeconfig=/tmp/kcp/admin.kubeconfig
+        - --cert-dir=/etc/kcp/tls/server
+        - --secure-port=6444
+        volumeMounts:
+        - name: etcd-certs
+          mountPath: /etc/etcd/tls/server
+        - name: kcp-certs
+          mountPath: /etc/kcp/tls/server
+        - name: kubeconfig
+          mountPath: /tmp/kcp
+      volumes:
+      - name: etcd-certs
+        secret:
+          secretName: etcd-secret
+      - name: kcp-certs
+        secret:
+          secretName: kcp-secret
+      - name: kubeconfig
+        emptyDir: {}
