@@ -5,4 +5,4 @@ metadata:
 spec:
   credentials:
     namespace: default
-    name: shard-root-kubeconfig
+    name: shard-SHARD_NAME-kubeconfig
