@@ -332,7 +332,10 @@ func (s *Server) Run(ctx context.Context) error {
 		klog.Infof("Finished start kcp informers")
 
 		// bootstrap root workspace with workspace shard
-		servingCert, _ := server.SecureServingInfo.Cert.CurrentCertKeyContent()
+		servingCert := []byte{}
+		if s.options.Extra.CADataInKubeconfigs {
+			servingCert, _ = server.SecureServingInfo.Cert.CurrentCertKeyContent()
+		}
 		if err := configroot.Bootstrap(goContext(ctx),
 			apiextensionsClusterClient.Cluster(v1alpha1.RootCluster).Discovery(),
 			dynamicClusterClient.Cluster(v1alpha1.RootCluster),
@@ -399,7 +402,7 @@ func (s *Server) Run(ctx context.Context) error {
 			return err
 		}
 
-		syncerConfig, err := s.options.AdminAuthentication.GetPushModeSyncerKubeconfig(genericConfig, newTokenOrEmpty, tokenHash)
+		syncerConfig, err := s.options.AdminAuthentication.GetPushModeSyncerKubeconfig(genericConfig, newTokenOrEmpty, tokenHash, s.options.Extra.CADataInKubeconfigs)
 		if err != nil {
 			return err
 		}
@@ -454,7 +457,7 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}
 
-	if err := s.options.AdminAuthentication.WriteKubeConfig(genericConfig, newTokenOrEmpty, tokenHash); err != nil {
+	if err := s.options.AdminAuthentication.WriteKubeConfig(genericConfig, newTokenOrEmpty, tokenHash, s.options.Extra.CADataInKubeconfigs); err != nil {
 		return err
 	}
 

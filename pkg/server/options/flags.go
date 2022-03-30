@@ -154,6 +154,7 @@ var (
 		"shutdown-send-retry-after",            // If true the HTTP Server will continue listening until all non long running request(s) in flight have been drained, during this window all incoming requests will be rejected with a status code 429 and a 'Retry-After' response header, in addition 'Connection: close' response header is set in order to tear down the TCP connection when idle.
 		"strict-transport-security-directives", // List of directives for HSTS, comma separated. If this list is empty, then HSTS directives will not be added. Example: 'max-age=31536000,includeSubDomains,preload'
 		"external-hostname",                    // The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs or OpenID Discovery).
+		"enable-cadata-in-kubeconfigs",        // Set CA data in generated kubeconfigs
 
 		// etcd flags
 		"etcd-cafile",                   // SSL Certificate Authority file used to secure etcd communication.

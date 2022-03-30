@@ -108,8 +108,11 @@ func (s *AdminAuthentication) ApplyTo(config *genericapiserver.Config) (newToken
 }
 
 // TODO(jmprusi): delete once push mode is removed.
-func (s *AdminAuthentication) GetPushModeSyncerKubeconfig(config *genericapiserver.Config, newToken string, tokenHash []byte) (*clientcmdapi.Config, error) {
-	externalCACert, _ := config.SecureServing.Cert.CurrentCertKeyContent()
+func (s *AdminAuthentication) GetPushModeSyncerKubeconfig(config *genericapiserver.Config, newToken string, tokenHash []byte, caDataInKubeconfigs bool) (*clientcmdapi.Config, error) {
+	externalCACert := []byte{}
+	if caDataInKubeconfigs {
+		externalCACert, _ = config.SecureServing.Cert.CurrentCertKeyContent()
+	}
 	externalKubeConfigHost := fmt.Sprintf("https://%s", config.ExternalAddress)
 
 	externalAdminUserName := "admin"
@@ -136,8 +139,11 @@ func (s *AdminAuthentication) GetPushModeSyncerKubeconfig(config *genericapiserv
 	return externalKubeConfig, nil
 }
 
-func (s *AdminAuthentication) WriteKubeConfig(config *genericapiserver.Config, newToken string, tokenHash []byte) error {
-	externalCACert, _ := config.SecureServing.Cert.CurrentCertKeyContent()
+func (s *AdminAuthentication) WriteKubeConfig(config *genericapiserver.Config, newToken string, tokenHash []byte, caDataInKubeconfigs bool) error {
+	externalCACert := []byte{}
+	if caDataInKubeconfigs {
+		externalCACert, _ = config.SecureServing.Cert.CurrentCertKeyContent()
+	}
 	externalKubeConfigHost := fmt.Sprintf("https://%s", config.ExternalAddress)
 
 	externalAdminUserName := "admin"

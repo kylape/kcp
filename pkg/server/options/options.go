@@ -53,6 +53,7 @@ type ExtraOptions struct {
 	EnableSharding           bool
 	DiscoveryPollInterval    time.Duration
 	ExperimentalBindFreePort bool
+	CADataInKubeconfigs      bool
 }
 
 type completedOptions struct {
@@ -89,6 +90,7 @@ func NewOptions() *Options {
 			EnableSharding:           false,
 			DiscoveryPollInterval:    60 * time.Second,
 			ExperimentalBindFreePort: false,
+			CADataInKubeconfigs:      true,
 		},
 	}
 
@@ -136,6 +138,7 @@ func (o *Options) rawFlags() cliflag.NamedFlagSets {
 	fs.BoolVar(&o.Extra.EnableSharding, "enable-sharding", o.Extra.EnableSharding, "Enable delegating to peer kcp shards.")
 	fs.StringVar(&o.Extra.RootDirectory, "root-directory", o.Extra.RootDirectory, "Root directory.")
 	fs.DurationVar(&o.Extra.DiscoveryPollInterval, "discovery-poll-interval", o.Extra.DiscoveryPollInterval, "Polling interval for dynamic discovery informers.")
+	fs.BoolVar(&o.Extra.CADataInKubeconfigs, "enable-cadata-in-kubeconfigs", o.Extra.CADataInKubeconfigs, "Set CA data in generated kubeconfigs.")
 
 	fs.BoolVar(&o.Extra.ExperimentalBindFreePort, "experimental-bind-free-port", o.Extra.ExperimentalBindFreePort, "Bind to a free port. --secure-port must be 0. Use the admin.kubeconfig to extract the chosen port.")
 	fs.MarkHidden("experimental-bind-free-port") // nolint:errcheck
