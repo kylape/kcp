@@ -1,0 +1,9 @@
+metadata:
+  attributes:
+      appModelRepository.context: /
+      appModelRepository.url: https://github.com/redhat-appstudio-appdata/control-plane-service-klape-insights-comply-earn
+      gitOpsRepository.context: ./
+      gitOpsRepository.url: https://github.com/redhat-appstudio-appdata/control-plane-service-klape-insights-comply-earn
+    description: Control Plane Service
+    name: Control Plane Service
+  schemaVersion: 2.1.0
